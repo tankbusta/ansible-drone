@@ -1,0 +1,15 @@
+---
+
+drone_version: latest
+
+# drone_env_open controls whether drone allows anyone to register & login with drone
+drone_env_open: true
+
+# drone_github_client should be set to the Github oauth2 client id you got when creating your application in GitHub
+drone_github_client:
+
+#drone_github_secret should be set to the Github oauth2 client secret you got when creating your application in GitHub
+drone_github_secret:
+
+# drone_github_url should be set to github.com or your GHE equivalent
+drone_github_url: https://github.com

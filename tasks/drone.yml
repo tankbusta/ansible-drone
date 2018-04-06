@@ -1,0 +1,47 @@
+---
+  - name: Ensure docker-py exists
+    pip:
+      name: docker-py
+
+  - name: start drone servers
+    docker_container:
+      name: "drone-server-{{ item.name }}"
+      image: "drone/drone:{{ drone_version | mandatory }}"
+      state: started
+      restart_policy: always
+      ports:
+        - 80:8000
+        - 9000:9000
+      volumes:
+        - "/var/lib/drone:{{ item.drone_data_dir | default('/var/lib/drone') }}"
+      env:
+        DRONE_OPEN: "{{ drone_env_open }}"
+        DRONE_GITHUB: true
+        DRONE_SECRET: "{{ item.env.drone_secret | mandatory }}"
+        DRONE_GITHUB_URL: "{{ drone_github_url }}"
+        DRONE_GITHUB_CLIENT: "{{ drone_github_client }}"
+        DRONE_GITHUB_SECRET: "{{ drone_github_secret }}"
+        DRONE_DEBUG: "{{ item.env.drone_debug | default('false') }}"
+        DRONE_HOST: "{{ item.env.drone_host | mandatory }}"
+        # DRONE_DATABASE_DRIVER: "{{ item.env.drone_database_driver | mandatory }}"
+        # DRONE_DATABASE_DATASOURCE: "{{ item.env.drone_database_datasource | mandatory }}"
+    with_items: "{{ drone_infrastructure }}"
+    when:
+      - item.role == 'server'
+
+  - name: start drone agents
+    docker_container:
+      name: "drone-agent-{{ item.name }}"
+      image: "drone/agent:{{ drone_version | mandatory }}"
+      privileged: "{{ item.privileged | default('false') }}"
+      state: started
+      restart_policy: always
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+      env:
+        DRONE_SERVER: "{{ item.env.drone_server | mandatory }}"
+        DRONE_DEBUG: "{{ item.env.drone_debug | default('false') }}"
+        DRONE_SECRET: "{{ item.env.drone_secret | mandatory }}"
+    with_items: "{{ drone_infrastructure }}"
+    when:
+      - item.role == 'agent'
